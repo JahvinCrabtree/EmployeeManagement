@@ -36,7 +36,7 @@
                         <Font name="Tahoma" size="6.0" />
                      </font>
                   </Label>
-                  <Button fx:id="loginBtn" layoutX="84.0" layoutY="200.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="131.0" text="Login" />
+                  <Button fx:id="loginBtn" layoutX="84.0" layoutY="200.0" mnemonicParsing="false" onAction="#loginAdmin" prefHeight="25.0" prefWidth="131.0" text="Login" />
                </children>
             </AnchorPane>
          </children>

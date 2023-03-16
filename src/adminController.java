@@ -2,6 +2,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,6 +12,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 public class adminController {
@@ -28,6 +30,9 @@ public class adminController {
     private TextField usernameField;
 
     // DATABASE TOOLS.
+
+    private double x = 0;
+    private double y = 0;
 
     private Connection connect;
     private ResultSet result;
@@ -52,15 +57,26 @@ public class adminController {
                 alert.setContentText("Please fill all blank fields.");
             }
             else if (result.next()){
+
                 alert = new Alert(AlertType.INFORMATION);
                 alert.setTitle("Information Message");
                 alert.setHeaderText(null);
                 alert.setContentText("Successfull Login.");
 
                 loginBtn.getScene().getWindow().hide();
-                Parent root = FXMLLoader.load(getClass().getResource(""));
+                Parent root = FXMLLoader.load(getClass().getResource("dashboard.fxml"));
                 Stage stage = new Stage();
                 Scene scene = new Scene(root);
+
+                root.setOnMousePressed((MouseEvent event) ->{
+                    x = event.getSceneX();
+                    y = event.getSceneY();
+                });
+
+                root.setOnMouseDragged((MouseEvent event) -> {
+                    stage.setX(event.getSceneX() - x);
+                    stage.setX(event.getSceneY() - y);
+                });
 
                 stage.setScene(scene);
                 stage.show();

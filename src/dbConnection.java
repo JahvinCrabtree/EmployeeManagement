@@ -10,7 +10,7 @@ public class dbConnection {
         /* Local host security and inforamtion
            to connect to the correct local host database. */
 
-        String databaseName = "testdb";
+        String databaseName = "employeedb";
         String databaseUser = "root";
         String databasePassword = "Jahvin18";
         
