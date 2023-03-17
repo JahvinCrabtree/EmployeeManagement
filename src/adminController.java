@@ -64,7 +64,7 @@ public class adminController {
                 alert.setContentText("Successfull Login.");
 
                 loginBtn.getScene().getWindow().hide();
-                Parent root = FXMLLoader.load(getClass().getResource("dashboard.fxml"));
+                Parent root = FXMLLoader.load(getClass().getResource("FXML/dashboard.fxml"));
                 Stage stage = new Stage();
                 Scene scene = new Scene(root);
 
