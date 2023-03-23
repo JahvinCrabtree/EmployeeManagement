@@ -1,7 +1,17 @@
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Date;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
+import com.mysql.cj.xdevapi.Result;
+import com.mysql.cj.xdevapi.Statement;
+
+import javafx.beans.value.ObservableListValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -18,6 +28,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -36,25 +47,25 @@ public class dashboardController {
     private Button addEmployee_clearBtn;
 
     @FXML
-    private TableColumn<?, ?> addEmployee_col_date;
+    private TableColumn<employeeData, String> addEmployee_col_date;
 
     @FXML
-    private TableColumn<?, ?> addEmployee_col_employeeID;
+    private TableColumn<employeeData, String> addEmployee_col_employeeID;
 
     @FXML
-    private TableColumn<?, ?> addEmployee_col_firstName;
+    private TableColumn<employeeData, String> addEmployee_col_firstName;
 
     @FXML
-    private TableColumn<?, ?> addEmployee_col_gender;
+    private TableColumn<employeeData, String> addEmployee_col_gender;
 
     @FXML
-    private TableColumn<?, ?> addEmployee_col_lastName;
+    private TableColumn<employeeData, String> addEmployee_col_lastName;
 
     @FXML
-    private TableColumn<?, ?> addEmployee_col_phoneNum;
+    private TableColumn<employeeData, String> addEmployee_col_phoneNum;
 
     @FXML
-    private TableColumn<?, ?> addEmployee_col_position;
+    private TableColumn<employeeData, String> addEmployee_col_position;
 
     @FXML
     private Button addEmployee_deleteBtn;
@@ -90,7 +101,7 @@ public class dashboardController {
     private TextField addEmployee_search;
 
     @FXML
-    private TableView<?> addEmployee_tableView;
+    private TableView<employeeData> addEmployee_tableView;
 
     @FXML
     private Button addEmployee_updateBtn;
@@ -184,7 +195,7 @@ public class dashboardController {
     }
 
     @FXML
-    void addEmployeeGendernList(ActionEvent event) {
+    void addEmployeeGenderList(ActionEvent event) {
 
     }
 
@@ -224,8 +235,34 @@ public class dashboardController {
     }
 
     @FXML
-    void logout(ActionEvent event) {
+    public void logout() {
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Confirmation Message");
+        alert.setHeaderText(null);
+        alert.setContentText("Are you sure you want to logout?");
+        Optional<ButtonType> option = alert.showAndWait();
 
+    try {
+        if(option.get().equals(ButtonType.OK)) {
+            Parent root = FXMLLoader.load(getClass().getResource("login.fxml"));
+            Stage stage = new Stage();
+            Scene scene = new Scene(root);
+
+            stage.setScene(scene);
+            stage.show();
+
+            // Lambda expression (had to point this out because this was a big moment)
+
+            root.setOnMousePressed((MouseEvent event) -> {
+                x = event.getSceneX();
+                y = event.getSceneY();
+            });
+
+            
+        }
+    } catch(Exception e) { 
+        e.printStackTrace(); 
+    }
     }
 
     @FXML
@@ -271,45 +308,109 @@ public class dashboardController {
 
     }
 
+    private Connection connect;
+    private Statement statement;
+    private PreparedStatement prepare;
+    private ResultSet result;
+    
+    private ObservableList<employeeData> addEmployeeListData() {
+
+        //  queries into the "Employee" table.
+
+        ObservableList<employeeData> listData = FXCollections.observableArrayList();
+        String sql = "SELECT * FROM employee";
+
+        connect = dbConnection.getConnection();
+
+        try {
+            prepare = connect.prepareStatement(sql);
+            result = prepare.executeQuery();
+            employeeData eData;
+
+            //  Allows for the data in the SQL database to be accessed via table name.
+
+            while(result.next()) {
+                eData = new employeeData(result.getInt("employee_id"), 
+                 result.getString("firstName"), 
+                 result.getString("lastName"), 
+                 result.getString("gender"), 
+                 result.getString("phoneNum"), 
+                 result.getString("position"), 
+                 result.getDate("date"));
+            }
+        } catch (Exception e) {e.printStackTrace();}
+         
+        return listData;
+
+    }
+
+    private ObservableList<employeeData> addEmployeeList;
+    public void addEmployeeShowListData() {
+        addEmployeeList = addEmployeeListData();
+
+        // following code hopefully updates the values on the app with the data thats in the SQL database.
+
+        addEmployee_col_employeeID.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
+        addEmployee_col_firstName.setCellValueFactory(new PropertyValueFactory<>("firstName"));
+        addEmployee_col_lastName.setCellValueFactory(new PropertyValueFactory<>("lastName"));
+        addEmployee_col_gender.setCellValueFactory(new PropertyValueFactory<>("gender"));
+        addEmployee_col_phoneNum.setCellValueFactory(new PropertyValueFactory<>("phoneNum"));
+        addEmployee_col_position.setCellValueFactory(new PropertyValueFactory<>("position"));
+        addEmployee_col_date.setCellValueFactory(new PropertyValueFactory<>("date"));
+
+        addEmployee_tableView.setItems(addEmployeeList);
+    }
+
+    public void addEmployeeSelect() {
+        employeeData eData = addEmployee_tableView.getSelectionModel().getSelectedItem();
+        int num = addEmployee_tableView.getSelectionModel().getSelectedIndex();
+
+        if((num - 1) < -1) {return;}
+
+        addEmployee_employeeID.setText(String.valueOf(eData.getEmployeeId()));
+        addEmployee_firstName.setText(eData.getFirstName());
+        addEmployee_lastName.setText(eData.getLastName());
+        addEmployee_phoneNum.setText(eData.getPhoneNum());
+
+    }
+
+    public void addEmployeeAdd() {
+        Date date = new Date();
+        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+
+        String sql = "INSERT INTO employee "
+        + "(employee_id, firstName, lastName, gender, phoneNum, position, date) "
+        + "VALUES(?,?,?,?,?,?,?)";
+
+        connect = dbConnection.getConnection();
+
+        try{
+
+            prepare = connect.prepareStatement(sql);
+            prepare.setString(1, addEmployee_employeeID.getText());
+            prepare.setString(2, addEmployee_firstName.getText());
+            prepare.setString(3, addEmployee_lastName.getText());
+            prepare.setString(4, (String) addEmployee_gender.getSelectionModel().getSelectedItem()); // Has to be converted to string.
+            prepare.setString(5, addEmployee_col_gender.getText());
+            prepare.setString(6, addEmployee_phoneNum.getText());
+            prepare.setString(7, String.valueOf(sqlDate));
+
+
+        } catch (Exception e) {e.printStackTrace();}
+     }
+
     public void setUsername() {
-        username.setText(getData.username); // Sets label to the name used to login.
+        
+        // Sets label to the name used to login.
+
+        username.setText(getData.username); 
     }
 
     private double x = 0;
     private double y = 0;
 
-    public void logout() {
-        Alert alert = new Alert(AlertType.CONFIRMATION);
-        alert.setTitle("Confirmation Message");
-        alert.setHeaderText(null);
-        alert.setContentText("Are you sure you want to logout?");
-        Optional<ButtonType> option = alert.showAndWait();
-
-    try {
-        if(option.get().equals(ButtonType.OK)) {
-            Parent root = FXMLLoader.load(getClass().getResource("login.fxml"));
-            Stage stage = new Stage();
-            Scene scene = new Scene(root);
-
-            stage.setScene(scene);
-            stage.show();
-
-            // Lambda expression (had to point this out because this was a big moment)
-
-            root.setOnMousePressed((MouseEvent event) -> {
-                x = event.getSceneX();
-                y = event.getSceneY();
-            });
-
-            
-        }
-    } catch(Exception e) { 
-        e.printStackTrace(); 
-    }
-    }
-
     public void initialize(URL location, ResourceBundle resources) {
-        
+        addEmployeeShowListData();
     }
 
 }

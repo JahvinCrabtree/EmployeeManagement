@@ -37,6 +37,14 @@ public class employeeData {
         return gender;
     }
 
+    public String getPhoneNum() {
+        return phoneNum;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
     public Date getDate() {
         return date;
     }
