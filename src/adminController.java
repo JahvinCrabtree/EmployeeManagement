@@ -57,6 +57,7 @@ public class adminController {
                 alert.setContentText("Please fill all blank fields.");
             }
             else if (result.next()){
+                getData.username = usernameField.getText();
 
                 alert = new Alert(AlertType.INFORMATION);
                 alert.setTitle("Information Message");

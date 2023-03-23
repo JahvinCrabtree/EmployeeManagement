@@ -22,6 +22,7 @@ try {
 
     root = FXMLLoader.load(getClass().getResource("FXML/login.fxml"));
     Scene scene = new Scene(root);
+    scene.getStylesheets().add("FXML/login.css");
     primaryStage.setTitle("Admin Home.");
     primaryStage.setScene(scene);
     primaryStage.show();} catch (IOException e) {

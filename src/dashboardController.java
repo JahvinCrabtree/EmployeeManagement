@@ -251,6 +251,28 @@ public class dashboardController {
     @FXML
     void switchForm(ActionEvent event) {
 
+        if (event.getSource() == home_btn) {
+            home_form.setVisible(true);
+            addEmployee_form.setVisible(false);
+            salary_form.setVisible(false);
+
+
+        } else if (event.getSource() == addEmployee_btn) {
+            home_form.setVisible(false);
+            addEmployee_form.setVisible(true);
+            salary_form.setVisible(false);
+
+        } else if (event.getSource() == salary_btn) {
+            home_form.setVisible(false);
+            addEmployee_form.setVisible(false);
+            salary_form.setVisible(true);
+
+        }
+
+    }
+
+    public void setUsername() {
+        username.setText(getData.username); // Sets label to the name used to login.
     }
 
     private double x = 0;

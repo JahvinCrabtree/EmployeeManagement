@@ -33,9 +33,11 @@ public class employeeData {
         return lastName;
     }
 
-    public String getGende() {
+    public String getGender() {
         return gender;
     }
 
-    public String 
+    public Date getDate() {
+        return date;
+    }
 }
