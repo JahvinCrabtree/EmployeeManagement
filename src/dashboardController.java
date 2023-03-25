@@ -2,7 +2,9 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.sql.Statement;
@@ -187,7 +189,7 @@ public class dashboardController {
 
     @FXML
     void addEmployeeAdd(ActionEvent event) {
-
+        addEmployeeAdd();
     }
 
     @FXML
@@ -200,6 +202,7 @@ public class dashboardController {
 
     }
 
+    // needs to be fixed :(
     @FXML
     void addEmployeeInsertImage(MouseEvent event) {
 
@@ -207,12 +210,12 @@ public class dashboardController {
 
     @FXML
     void addEmployeePositionList(ActionEvent event) {
-
+        addEmployeePositionList();
     }
 
     @FXML
     void addEmployeeReset(ActionEvent event) {
-
+        addEmployeeReset();
     }
 
     @FXML
@@ -222,17 +225,17 @@ public class dashboardController {
 
     @FXML
     void addEmployeeSelect(MouseEvent event) {
-
+        addEmployeeSelect();
     }
 
     @FXML
     void addEmployeeUpdate(ActionEvent event) {
-
+        
     }
 
     @FXML
     void close(ActionEvent event) {
-
+        
     }
 
     @FXML
@@ -299,6 +302,9 @@ public class dashboardController {
             addEmployee_form.setVisible(true);
             salary_form.setVisible(false);
 
+            addEmployeeGenderList();
+            addEmployeePositionList();
+
         } else if (event.getSource() == salary_btn) {
             home_form.setVisible(false);
             addEmployee_form.setVisible(false);
@@ -309,10 +315,32 @@ public class dashboardController {
     }
 
 
+    // Actions for the drop down boxes on the Employee page. 
+    
     private String[] positionList = {"Manager", "Deputy Manager", "Chief of Operations", "Chief of Communication", "Supervisor", "Marketer", "HR Assistant"};
     
     public void addEmployeePositionList() {
+        List<String> listP = new ArrayList<>();
 
+        for(String data: positionList) {
+            listP.add(data);
+        }
+        
+        ObservableList listData = FXCollections.observableArrayList(listP);
+        addEmployee_position.setItems(listData);
+    }
+
+    private String[] genderList = {"Male", "Female", "Other"};
+    
+    public void addEmployeeGenderList() {
+        List<String> listG = new ArrayList<>();
+
+        for(String data: genderList) {
+            listG.add(data);
+        }
+        
+        ObservableList listData = FXCollections.observableArrayList(listG);
+        addEmployee_gender.setItems(listData);
     }
 
     public void addEmployeeAdd() {
@@ -334,8 +362,7 @@ public class dashboardController {
             || addEmployee_lastName.getText().isEmpty() 
             || addEmployee_gender.getSelectionModel().getSelectedItem() == null // different because it's a comboBox - but it's the same principle.
             || addEmployee_phoneNum.getText().isEmpty()
-            || addEmployee_position.getSelectionModel().getSelectedItem() == null
-            || getData.path == null || getData.path == "") {
+            || addEmployee_position.getSelectionModel().getSelectedItem() == null) {
                 alert = new Alert(AlertType.ERROR);
                 alert.setTitle("Error Message!");
                 alert.setHeaderText(null);
@@ -343,7 +370,7 @@ public class dashboardController {
                 alert.showAndWait();
             } else {
 
-            String check = "SELECT employere_id FROM employhee WHERE employee_id = '"
+            String check = "SELECT employee_id FROM employee WHERE employee_id = '"
                 +addEmployee_employeeID.getText()+"'";
             
             statement = connect.createStatement();
@@ -469,6 +496,8 @@ public class dashboardController {
 
     public void initialize(URL location, ResourceBundle resources) {
         addEmployeeShowListData();
+        addEmployeeGenderList();
+        addEmployeePositionList();
     }
 
 }
