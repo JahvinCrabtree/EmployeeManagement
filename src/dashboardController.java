@@ -5,11 +5,10 @@ import java.sql.ResultSet;
 import java.util.Date;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.sql.Statement;
 
-import com.mysql.cj.xdevapi.Result;
-import com.mysql.cj.xdevapi.Statement;
 
-import javafx.beans.value.ObservableListValue;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -34,6 +33,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+
+
 
 public class dashboardController {
 
@@ -293,7 +294,6 @@ public class dashboardController {
             addEmployee_form.setVisible(false);
             salary_form.setVisible(false);
 
-
         } else if (event.getSource() == addEmployee_btn) {
             home_form.setVisible(false);
             addEmployee_form.setVisible(true);
@@ -307,6 +307,102 @@ public class dashboardController {
         }
 
     }
+
+
+    private String[] positionList = {"Manager", "Deputy Manager", "Chief of Operations", "Chief of Communication", "Supervisor", "Marketer", "HR Assistant"};
+    
+    public void addEmployeePositionList() {
+
+    }
+
+    public void addEmployeeAdd() {
+        Date date = new Date();
+        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+
+        String sql = "INSERT INTO employee "
+        + "(employee_id, firstName, lastName, gender, phoneNum, position, date) "
+        + "VALUES(?,?,?,?,?,?,?)";
+
+        connect = dbConnection.getConnection();
+
+        try{
+
+            Alert alert;
+
+            if(addEmployee_employeeID.getText().isEmpty() 
+            || addEmployee_firstName.getText().isEmpty()
+            || addEmployee_lastName.getText().isEmpty() 
+            || addEmployee_gender.getSelectionModel().getSelectedItem() == null // different because it's a comboBox - but it's the same principle.
+            || addEmployee_phoneNum.getText().isEmpty()
+            || addEmployee_position.getSelectionModel().getSelectedItem() == null
+            || getData.path == null || getData.path == "") {
+                alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error Message!");
+                alert.setHeaderText(null);
+                alert.setContentText("Please fill in all blank fields.");
+                alert.showAndWait();
+            } else {
+
+            String check = "SELECT employere_id FROM employhee WHERE employee_id = '"
+                +addEmployee_employeeID.getText()+"'";
+            
+            statement = connect.createStatement();
+            result = statement.executeQuery(check);
+
+            if(result.next()) {
+                alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error Message!");
+                alert.setHeaderText(null);
+                alert.setContentText("Employee ID: " + addEmployee_employeeID.getText() +" already exists.");
+                alert.showAndWait();
+            }
+
+            prepare = connect.prepareStatement(sql);
+            prepare.setString(1, addEmployee_employeeID.getText()); // Numbers in order of the column they relate to in the DB
+            prepare.setString(2, addEmployee_firstName.getText());
+            prepare.setString(3, addEmployee_lastName.getText());
+            prepare.setString(4, (String) addEmployee_gender.getSelectionModel().getSelectedItem()); // Has to be converted to string.
+            prepare.setString(5, addEmployee_phoneNum.getText());
+            prepare.setString(6, (String) addEmployee_position.getSelectionModel().getSelectedItem());
+            prepare.setString(7, String.valueOf(sqlDate));
+            prepare.executeLargeUpdate();
+
+            alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Information Message!");
+            alert.setHeaderText(null);
+            alert.setContentText("Successfully Added!");
+            alert.showAndWait();
+
+            addEmployeeReset();
+            addEmployeeShowListData();
+        }
+
+        } catch (Exception e) {e.printStackTrace();}
+    }
+
+    public void addEmployeeReset() {
+        addEmployee_employeeID.setText("");
+        addEmployee_firstName.setText("");
+        addEmployee_lastName.setText("");
+        addEmployee_gender.getSelectionModel().clearSelection();
+        addEmployee_phoneNum.setText("");
+        addEmployee_position.getSelectionModel().clearSelection();
+        getData.path = "";
+    }
+
+    public void addEmployeeSelect() {
+        employeeData eData = addEmployee_tableView.getSelectionModel().getSelectedItem();
+        int num = addEmployee_tableView.getSelectionModel().getSelectedIndex();
+
+        if((num - 1) < -1) {return;}
+
+        addEmployee_employeeID.setText(String.valueOf(eData.getEmployeeId()));
+        addEmployee_firstName.setText(eData.getFirstName());
+        addEmployee_lastName.setText(eData.getLastName());
+        addEmployee_phoneNum.setText(eData.getPhoneNum());
+    }
+
+
 
     private Connection connect;
     private Statement statement;
@@ -360,44 +456,6 @@ public class dashboardController {
 
         addEmployee_tableView.setItems(addEmployeeList);
     }
-
-    public void addEmployeeSelect() {
-        employeeData eData = addEmployee_tableView.getSelectionModel().getSelectedItem();
-        int num = addEmployee_tableView.getSelectionModel().getSelectedIndex();
-
-        if((num - 1) < -1) {return;}
-
-        addEmployee_employeeID.setText(String.valueOf(eData.getEmployeeId()));
-        addEmployee_firstName.setText(eData.getFirstName());
-        addEmployee_lastName.setText(eData.getLastName());
-        addEmployee_phoneNum.setText(eData.getPhoneNum());
-
-    }
-
-    public void addEmployeeAdd() {
-        Date date = new Date();
-        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
-
-        String sql = "INSERT INTO employee "
-        + "(employee_id, firstName, lastName, gender, phoneNum, position, date) "
-        + "VALUES(?,?,?,?,?,?,?)";
-
-        connect = dbConnection.getConnection();
-
-        try{
-
-            prepare = connect.prepareStatement(sql);
-            prepare.setString(1, addEmployee_employeeID.getText());
-            prepare.setString(2, addEmployee_firstName.getText());
-            prepare.setString(3, addEmployee_lastName.getText());
-            prepare.setString(4, (String) addEmployee_gender.getSelectionModel().getSelectedItem()); // Has to be converted to string.
-            prepare.setString(5, addEmployee_col_gender.getText());
-            prepare.setString(6, addEmployee_phoneNum.getText());
-            prepare.setString(7, String.valueOf(sqlDate));
-
-
-        } catch (Exception e) {e.printStackTrace();}
-     }
 
     public void setUsername() {
         
