@@ -230,7 +230,7 @@ public class dashboardController {
 
     @FXML
     void addEmployeeUpdate(ActionEvent event) {
-        
+        addEmployeeUpdate();
     }
 
     @FXML
@@ -248,7 +248,8 @@ public class dashboardController {
 
     try {
         if(option.get().equals(ButtonType.OK)) {
-            Parent root = FXMLLoader.load(getClass().getResource("login.fxml"));
+            logout.getScene().getWindow().hide();
+            Parent root = FXMLLoader.load(getClass().getResource("FXML/login.fxml"));
             Stage stage = new Stage();
             Scene scene = new Scene(root);
 
@@ -459,7 +460,8 @@ public class dashboardController {
                  result.getString("gender"), 
                  result.getString("phoneNum"), 
                  result.getString("position"), 
-                 result.getDate("date"));
+                 result.getDate("date")); // Shows the data in the table (Missed this for what ? 4 days or so)
+            listData.add(eData);                      // data would show in SQL but not on the app table.
             }
         } catch (Exception e) {e.printStackTrace();}
          
@@ -482,6 +484,69 @@ public class dashboardController {
         addEmployee_col_date.setCellValueFactory(new PropertyValueFactory<>("date"));
 
         addEmployee_tableView.setItems(addEmployeeList);
+    }
+
+    // allows me to select an employee through the ID and change the details in SQL.
+    
+    public void addEmployeeUpdate() {
+
+        Date date = new Date();
+        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+
+        String sql = "UPDATE employee SET firstName = '"
+            + addEmployee_firstName.getText()+"', lastName = '" 
+            + addEmployee_lastName.getText()+", gender = '" 
+            + addEmployee_gender.getSelectionModel().getSelectedItem()+ "', phoneNum = '"
+            + addEmployee_phoneNum.getText()+", position = '"
+            + addEmployee_position.getSelectionModel().getSelectedItem()+ "', date = '"+ sqlDate +"' WHERE employee_id ='"
+            + addEmployee_employeeID.getText() + "'";
+
+            connect = dbConnection.getConnection();
+
+            try {
+                
+                Alert alert;
+
+                if(addEmployee_employeeID.getText().isEmpty() 
+                || addEmployee_firstName.getText().isEmpty()
+                || addEmployee_lastName.getText().isEmpty() 
+                || addEmployee_gender.getSelectionModel().getSelectedItem() == null // different because it's a comboBox - but it's the same principle.
+                || addEmployee_phoneNum.getText().isEmpty()
+                || addEmployee_position.getSelectionModel().getSelectedItem() == null) {
+                    alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Error Message!");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Please fill in all blank fields.");
+                    alert.showAndWait();
+                } else {
+                    alert = new Alert(AlertType.CONFIRMATION);
+                    alert.setTitle("Confirmation Message!");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Are you sure you want to UPDATE Employee ID: " + addEmployee_employeeID.getText() + "?");
+
+                    Optional<ButtonType> option = alert.showAndWait();
+                    if(option.get().equals(ButtonType.OK)) {
+                        statement = connect.createStatement();
+                        statement.executeUpdate(sql);
+
+                        alert = new Alert(AlertType.INFORMATION);
+                        alert.setTitle("Information Message!");
+                        alert.setHeaderText(null);
+                        alert.setContentText("Successfully updated!");
+                        alert.showAndWait();
+                    }
+                }
+
+            } catch (Exception e) {e.printStackTrace();}
+    }
+
+    public void addEmployeeDelete() {
+        
+        String sql = "DELETE FROM employee WHERE employee_id = '" 
+        + addEmployee_employeeID.getText() + "'";
+
+        connect = dbConnection.getConnection();
+
     }
 
     public void setUsername() {

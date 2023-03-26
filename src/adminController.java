@@ -55,6 +55,7 @@ public class adminController {
                 alert.setTitle("Error Message");
                 alert.setHeaderText(null);
                 alert.setContentText("Please fill all blank fields.");
+                alert.showAndWait();
             }
             else if (result.next()){
                 getData.username = usernameField.getText();
@@ -87,6 +88,7 @@ public class adminController {
                 alert.setTitle("Error Message");
                 alert.setHeaderText(null);
                 alert.setContentText("Username or Password is incorrect.");
+                alert.showAndWait();
             }
         } catch (Exception e) {
             e.printStackTrace();
