@@ -144,19 +144,19 @@ public class dashboardController {
     private Button salary_clearBtn;
 
     @FXML
-    private TableColumn<?, ?> salary_col_employeeID;
+    private TableColumn<employeeData, String> salary_col_employeeID;
 
     @FXML
-    private TableColumn<?, ?> salary_col_firstName;
+    private TableColumn<employeeData, String> salary_col_firstName;
 
     @FXML
-    private TableColumn<?, ?> salary_col_lastName;
+    private TableColumn<employeeData, String> salary_col_lastName;
 
     @FXML
-    private TableColumn<?, ?> salary_col_position;
+    private TableColumn<employeeData, String> salary_col_position;
 
     @FXML
-    private TableColumn<?, ?> salary_col_salary;
+    private TableColumn<employeeData, String> salary_col_salary;
 
     @FXML
     private TextField salary_employeeID;
@@ -179,6 +179,7 @@ public class dashboardController {
     @FXML
 
     // this gave me such a wonky error that took me forever to find because it was declared as "?" instead of employeeData. :) :) :) :)
+    // mainly because I forgot to update these when I updated them previously.
     private TableView<employeeData> salary_tableView;
 
     @FXML
@@ -521,6 +522,8 @@ public class dashboardController {
         Date date = new Date();
         java.sql.Date sqlDate = new java.sql.Date(date.getTime());
 
+        double salary = 0;
+
         String sql = "UPDATE employee SET firstName = '"
                 + addEmployee_firstName.getText() + "', lastName = '"
                 + addEmployee_lastName.getText() + "', gender = '"
@@ -560,6 +563,14 @@ public class dashboardController {
                 if (option.get().equals(ButtonType.OK)) {
                     statement = connect.createStatement();
                     statement.executeUpdate(sql);
+
+                    String updateInfo = "UPDATE employee_info SET firstName = '"
+                        + addEmployee_firstName.getText()+"' lastName = '"
+                        + addEmployee_lastName.getText()+"', position = '"
+                        + addEmployee_position.getSelectionModel().getSelectedItem(); 
+                        
+                    prepare = connect.prepareStatement(updateInfo);
+                    prepare.executeUpdate();
 
                     alert = new Alert(AlertType.INFORMATION);
                     alert.setTitle("Information Message!");
@@ -614,15 +625,23 @@ public class dashboardController {
                     statement = connect.createStatement();
                     statement.executeUpdate(sql);
 
+                    String deleteInfo  = "DELETE FROM customer_info WHERE employee_id ='"
+                        +addEmployee_employeeID.getText()+"'";
+
+                    prepare = connect.prepareStatement(deleteInfo);
+                    prepare.executeUpdate();
+
                     alert = new Alert(AlertType.INFORMATION);
                     alert.setTitle("Information Message!");
                     alert.setHeaderText(null);
                     alert.setContentText("Successfully deleted!");
                     alert.showAndWait();
+
+                    addEmployeeShowListData();
+                    addEmployeeReset();
+                    
                 }
-            }
-            
-            addEmployeeShowListData();
+            }            
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -728,6 +747,7 @@ public class dashboardController {
         addEmployeeShowListData();
         addEmployeeGenderList();
         addEmployeePositionList();
+        salaryShowListData();
     }
 
 }
