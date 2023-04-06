@@ -20,6 +20,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -236,7 +237,7 @@ public class dashboardController {
 
     @FXML
     void close(ActionEvent event) {
-
+        
     }
 
     @FXML
@@ -277,18 +278,18 @@ public class dashboardController {
 
     @FXML
     void salaryReset(ActionEvent event) {
-
+        salaryReset();
     }
 
     @FXML
     void salarySelect(MouseEvent event) {
-
+        salarySelect();
     }
 
     @FXML
     void salaryUpdate(ActionEvent event) {
-
-    }
+        salaryUpdate();
+    }   
 
     @FXML
     void switchForm(ActionEvent event) {
@@ -310,6 +311,8 @@ public class dashboardController {
             home_form.setVisible(false);
             addEmployee_form.setVisible(false);
             salary_form.setVisible(true);
+
+            salaryShowListData();
 
         }
 
@@ -522,9 +525,7 @@ public class dashboardController {
         Date date = new Date();
         java.sql.Date sqlDate = new java.sql.Date(date.getTime());
 
-        double salary = 0;
-
-        String sql = "UPDATE employee SET firstName = '"
+        String sql = "UPDATE employee_info SET firstName = '"
                 + addEmployee_firstName.getText() + "', lastName = '"
                 + addEmployee_lastName.getText() + "', gender = '"
                 + addEmployee_gender.getSelectionModel().getSelectedItem() + "', phoneNum = '"
@@ -560,9 +561,22 @@ public class dashboardController {
                         "Are you sure you want to UPDATE Employee ID: " + addEmployee_employeeID.getText() + "?");
 
                 Optional<ButtonType> option = alert.showAndWait();
+                
                 if (option.get().equals(ButtonType.OK)) {
                     statement = connect.createStatement();
                     statement.executeUpdate(sql);
+
+                    double salary = 0;
+
+                    String checkData = "SELECT * FROM employee_info HWERE employe_id = '"
+                        + addEmployee_employeeID.getText()+"'";
+            
+                    prepare = connect.prepareStatement(checkData);
+                    result = prepare.executeQuery();
+            
+                    while(result.next()) {
+                        salary = result.getDouble("salary");
+                    }
 
                     String updateInfo = "UPDATE employee_info SET firstName = '"
                         + addEmployee_firstName.getText()+"' lastName = '"
@@ -739,15 +753,174 @@ public class dashboardController {
         salary_tableView.setItems(salaryList);
 
     }
+
+    public void salaryUpdate() {
+        String sql = "UPDATE employee_info SET salary = '" + salary_salary.getText()
+            + "' WHERE employee_id = '"+ salary_employeeID.getText() +"'";
+
+            connect = dbConnection.getConnection();
+            try {
+                Alert alert;
+    
+                if (salary_employeeID.getText().isEmpty()
+                        || salary_firstName.getText().isEmpty()
+                        || salary_lastName.getText().isEmpty()
+                        || salary_position.getText().isEmpty()) {
+                    alert = new Alert(AlertType.ERROR);
+                    alert.setTitle("Error Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Please select item first");
+                    alert.showAndWait();
+                } else {
+                    statement = connect.createStatement();
+                    statement.executeUpdate(sql);
+    
+                    alert = new Alert(AlertType.INFORMATION);
+                    alert.setTitle("Information Message");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Successfully Updated!");
+                    alert.showAndWait();
+    
+                    salaryShowListData();
+                }
+    
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+    public void salarySelect() {
+        employeeData eData = salary_tableView.getSelectionModel().getSelectedItem();
+        int num = salary_tableView.getSelectionModel().getSelectedIndex();
+
+        if ((num - 1) < -1) {
+            return;
+        }
+
+        salary_employeeID.setText(String.valueOf(eData.getEmployeeId()));
+        salary_firstName.setText(eData.getFirstName());
+        salary_lastName.setText(eData.getLastName());
+        salary_position.setText(eData.getPosition());
+        salary_salary.setText(String.valueOf(eData.getSalary()));
+    }
+
+    public void salaryReset() {
+        salary_employeeID.setText("");
+        salary_firstName.setText("");
+        salary_lastName.setText("");
+        salary_position.setText("");
+        salary_salary.setText("");
+    }
+
+    public void homeTotalEmployees() {
+
+        String sql = "SELECT COUNT(id) FROM employee";
+
+        connect = dbConnection.getConnection();
+        int countData = 0;
+        try {
+
+            prepare = connect.prepareStatement(sql);
+            result = prepare.executeQuery();
+
+            while (result.next()) {
+                countData = result.getInt("COUNT(id)");
+            }
+
+            home_totalEmployees.setText(String.valueOf(countData));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void homeEmployeeTotalPresent() {
+
+        String sql = "SELECT COUNT(id) FROM employee_info";
+
+        connect = dbConnection.getConnection();
+        int countData = 0;
+        try {
+            statement = connect.createStatement();
+            result = statement.executeQuery(sql);
+
+            while (result.next()) {
+                countData = result.getInt("COUNT(id)");
+            }
+            home_totalPresents.setText(String.valueOf(countData));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void homeTotalInactive() {
+
+        String sql = "SELECT COUNT(id) FROM employee_info WHERE salary = '0.0'";
+
+        connect = dbConnection.getConnection();
+        int countData = 0;
+        try {
+            prepare = connect.prepareStatement(sql);
+            result = prepare.executeQuery();
+
+            while (result.next()) {
+                countData = result.getInt("COUNT(id)");
+            }
+            home_totalInactiveEm.setText(String.valueOf(countData));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    
+    // Broken - think it's something to do with my DATE implementation since it's not working properly in SQL either.
+    // give this a few days before I sulk.
+    
+    public void homeChart() {
+
+        home_chart.getData().clear();
+
+        String sql = "SELECT date, COUNT(id) FROM employee GROUP BY date ORDER BY TIMESTAMP(date) ASC LIMIT 7";
+
+        connect = dbConnection.getConnection();
+
+        try {
+            XYChart.Series chart = new XYChart.Series();
+
+            prepare = connect.prepareStatement(sql);
+            result = prepare.executeQuery();
+
+            while (result.next()) {
+                chart.getData().add(new XYChart.Data(result.getString(1), result.getInt(2)));
+            }
+
+            home_chart.getData().add(chart);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
     private double x = 0;
     private double y = 0;
 
     public void initialize(URL location, ResourceBundle resources) {
         setUsername();
+
         addEmployeeShowListData();
         addEmployeeGenderList();
         addEmployeePositionList();
+        
         salaryShowListData();
+        
+        homeTotalEmployees();
+        homeEmployeeTotalPresent();
+        homeTotalInactive();
+        homeChart();
     }
 
 }
